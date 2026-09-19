@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Primary Meta Tags -->
+<title>OcclusionBench // Multimodal Agent Evaluation Suite</title>
+<meta name="title" content="OcclusionBench // Multimodal Agent Evaluation Suite" />
+<meta name="description" content="A zero-dependency visual benchmark evaluating multimodal AI models on image occlusion, ground-truth entity resolution, and OSINT search trajectories." />
+<meta name="keywords" content="Multimodal AI, AI Evaluation, Computer Vision, OSINT, Data Annotation, Benchmark" />
+<meta name="robots" content="index, follow" />
+
+<!-- Open Graph / Facebook / LinkedIn -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://occlusion-bench.vercel.app/" />
+<meta property="og:title" content="OcclusionBench // Multimodal Agent Evaluation Suite" />
+<meta property="og:description" content="Evaluating multimodal AI models on adversarial visual degradation, strict 1-sentence rubrics, and reverse-search verification paths." />
+<meta property="og:image" content="https://occlusion-bench.vercel.app/preview.png" />
+
+<!-- Twitter / X -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content="https://occlusion-bench.vercel.app/" />
+<meta property="twitter:title" content="OcclusionBench // Multimodal Agent Evaluation Suite" />
+<meta property="twitter:description" content="Evaluating multimodal AI models on adversarial visual degradation, strict 1-sentence rubrics, and reverse-search verification paths." />
+<meta property="twitter:image" content="https://occlusion-bench.vercel.app/preview.png" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OcclusionBench // Multimodal Agent Evaluation Suite</title>
+  <style>
+    :root {
+      --bg: #090a0f;
+      --surface: #12151c;
+      --surface-border: #232836;
+      --text: #e2e8f0;
+      --text-muted: #8492a6;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --success: #10b981;
+      --fail: #ef4444;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--surface-border);
+      padding-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    /* Layout */
+    .grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    /* Sidebar List */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .case-item {
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .case-item:hover { border-color: var(--text-muted); }
+    .case-item.active {
+      border-color: var(--accent);
+      background: #141b2b;
+    }
+    .case-item-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .case-item-meta {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    /* Main View Area */
+    .workspace {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Image Comparison Slider */
+    .viewport {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      background: #000;
+      border: 1px solid var(--surface-border);
+      border-radius: 6px;
+      overflow: hidden;
+      user-select: none;
+    }
+    .viewport svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .layer-occluded {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-right: 2px solid #fff;
+    }
+    .slider-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #fff;
+      cursor: ew-resize;
+      z-index: 10;
+    }
+    .slider-tag {
+      position: absolute;
+      top: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 3px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+    .tag-left { left: 12px; }
+    .tag-right { right: 12px; }
+
+    /* Metadata Panel */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 6px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .panel-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .panel-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .panel-value {
+      font-size: 0.95rem;
+    }
+    .code-block {
+      background: #090a0f;
+      border: 1px solid var(--surface-border);
+      padding: 10px 12px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+
+    /* Evaluator Sandbox */
+    .sandbox-input-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    input[type="text"] {
+      flex: 1;
+      background: #090a0f;
+      border: 1px solid var(--surface-border);
+      border-radius: 4px;
+      padding: 8px 12px;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    button:hover { background: var(--accent-hover); }
+    .eval-result {
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      display: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    .eval-result.pass {
+      display: block;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--success);
+      color: #34d399;
+    }
+    .eval-result.fail {
+      display: block;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--fail);
+      color: #f87171;
+    }
+
+    /* OSINT Steps */
+    ol.steps-list {
+      padding-left: 20px;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div>
+      <h1>OcclusionBench // Multimodal Agent Evaluation</h1>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+        Adversarial visual benchmarks, objective rubrics, and reverse-search solution paths.
+      </p>
+    </div>
+    <div class="badge">SPEC: MULTIMODAL_QA_V2</div>
+  </header>
+
+  <div class="grid">
+    <!-- Test Case Selection -->
+    <div class="sidebar" id="caseList"></div>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+      <!-- Image Comparison Slider -->
+      <div class="viewport" id="viewport">
+        <!-- Base Layer (Original) -->
+        <svg id="svgOriginal" xmlns="http://www.w3.org/2000/svg"></svg>
+        
+        <!-- Clipped Layer (Occluded / Masked) -->
+        <div class="layer-occluded" id="occludedWrapper">
+          <svg id="svgOccluded" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+
+        <div class="slider-handle" id="sliderHandle"></div>
+        <div class="slider-tag tag-left">MASKED / OCCLUDED (AGENT VIEW)</div>
+        <div class="slider-tag tag-right">GROUND TRUTH</div>
+      </div>
+
+      <!-- Evaluation Instance Details -->
+      <div class="panel">
+        <div class="panel-row">
+          <span class="panel-label">Agent Prompt (Zero-Shot)</span>
+          <div class="code-block" id="taskPrompt"></div>
+        </div>
+
+        <div class="panel-row">
+          <span class="panel-label">One-Sentence Grading Rubric</span>
+          <div class="code-block" id="taskRubric"></div>
+        </div>
+
+        <div class="panel-row">
+          <span class="panel-label">Verified Provenance & License</span>
+          <span class="panel-value" id="taskLicense" style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted);"></span>
+        </div>
+      </div>
+
+      <!-- Rubric Evaluator Sandbox -->
+      <div class="panel">
+        <div class="panel-row">
+          <span class="panel-label">Automated Rubric Verification Sandbox</span>
+          <span style="font-size: 0.85rem; color: var(--text-muted);">
+            Test a generated agent response against this case's deterministic criteria.
+          </span>
+          <div class="sandbox-input-group">
+            <input type="text" id="evalInput" placeholder="Enter test response (e.g. City Hall Annex, Nairobi)..." />
+            <button id="evalBtn">Run Evaluation</button>
+          </div>
+          <div class="eval-result" id="evalResult"></div>
+        </div>
+      </div>
+
+      <!-- OSINT Trajectory Notes -->
+      <div class="panel">
+        <div class="panel-row">
+          <span class="panel-label">Step-by-Step Investigation Path (Ground Truth Verification)</span>
+          <ol class="steps-list" id="taskSteps"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const cases = [
+    {
+      id: "CASE_001",
+      title: "Municipal Brutalist Façade",
+      category: "Regional Architecture",
+      license: "Public Domain / CC0 (Archival Collection)",
+      prompt: "Identify the civic administration building shown in this cropped image. State the specific facility name and city.",
+      rubric: "Pass if the response explicitly identifies 'City Hall Annex' and 'Nairobi'; fail if it only states 'City Hall' or a generic municipal tower.",
+      evalRegex: /city\\s+hall\\s+annex.*nairobi|nairobi.*city\\s+hall\\s+annex/i,
+      steps: [
+        "Isolate the distinct concrete vertical brise-soleil (sun louvers) along the exterior elevation.",
+        "Perform crop-targeted visual search on the lower third ground-floor entrance pillars.",
+        "Cross-reference municipal real estate registry records to verify structural completion date and exact official annex name."
+      ],
+      drawOriginal: (svg) => {
+        svg.innerHTML = `
+          <rect width="100%" height="100%" fill="#1a1e29"/>
+          <!-- Building Base -->
+          <rect x="220" y="40" width="460" height="340" fill="#2d3345"/>
+          <!-- Windows and Louvers -->
+          ${Array.from({length: 14}).map((_, i) => `
+            <line x1="${240 + i * 30}" y1="50" x2="${240 + i * 30}" y2="340" stroke="#475569" stroke-width="6"/>
+          `).join('')}
+          <!-- Entrance Canopy -->
+          <rect x="360" y="280" width="180" height="100" fill="#0f172a"/>
+          <!-- Name Signage -->
+          <rect x="380" y="300" width="140" height="24" fill="#64748b"/>
+          <text x="450" y="316" fill="#ffffff" font-size="10" font-family="monospace" text-anchor="middle">CITY HALL ANNEX</text>
+        `;
+      },
+      drawOccluded: (svg) => {
+        svg.innerHTML = `
+          <rect width="100%" height="100%" fill="#1a1e29"/>
+          <rect x="220" y="40" width="460" height="340" fill="#2d3345"/>
+          ${Array.from({length: 14}).map((_, i) => `
+            <line x1="${240 + i * 30}" y1="50" x2="${240 + i * 30}" y2="340" stroke="#475569" stroke-width="6"/>
+          `).join('')}
+          <rect x="360" y="280" width="180" height="100" fill="#0f172a"/>
+          <!-- Occlusion Mask over sign -->
+          <rect x="370" y="290" width="160" height="40" fill="#090a0f" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4"/>
+          <text x="450" y="315" fill="#ef4444" font-size="10" font-family="monospace" text-anchor="middle">[OCCLUDED_TEXT_IDENTIFIER]</text>
+        `;
+      }
+    },
+    {
+      id: "CASE_002",
+      title: "Class 59 Locomotive Valve",
+      category: "Industrial Heritage",
+      license: "CC BY-SA 4.0 (Wikimedia Commons Archive)",
+      prompt: "Determine the exact locomotive class and historical rail authority that deployed this articulated steam engine component.",
+      rubric: "Pass if output explicitly cites 'Class 59' (or '59 class') and 'East African Railways' (EAR); fail on generic steam locomotive identifiers.",
+      evalRegex: /(59\\s*class|class\\s*59).*(east\\s*african\\s*railways|ear)/i,
+      steps: [
+        "Extract unique Garratt articulating mechanical joint layout and boiler mount diameter.",
+        "Query visual repository archives for meter-gauge 4-8-2+2-8-4 wheel arrangements.",
+        "Confirm livery markings and maintenance stamping against historical fleet registries."
+      ],
+      drawOriginal: (svg) => {
+        svg.innerHTML = `
+          <rect width="100%" height="100%" fill="#16181f"/>
+          <!-- Boiler Cylinder -->
+          <rect x="180" y="100" width="540" height="160" rx="20" fill="#831843"/>
+          <!-- Drive Wheels -->
+          <circle cx="280" cy="290" r="50" fill="#334155" stroke="#94a3b8" stroke-width="6"/>
+          <circle cx="420" cy="290" r="50" fill="#334155" stroke="#94a3b8" stroke-width="6"/>
+          <circle cx="560" cy="290" r="50" fill="#334155" stroke="#94a3b8" stroke-width="6"/>
+          <!-- EAR Brass Plate -->
+          <rect x="390" y="150" width="120" height="30" rx="4" fill="#ca8a04"/>
+          <text x="450" y="170" fill="#000" font-size="11" font-family="monospace" font-weight="bold" text-anchor="middle">EAR 5918</text>
+        `;
+      },
+      drawOccluded: (svg) => {
+        svg.innerHTML = `
+          <rect width="100%" height="100%" fill="#16181f"/>
+          <rect x="180" y="100" width="540" height="160" rx="20" fill="#831843"/>
+          <circle cx="280" cy="290" r="50" fill="#334155" stroke="#94a3b8" stroke-width="6"/>
+          <circle cx="420" cy="290" r="50" fill="#334155" stroke="#94a3b8" stroke-width="6"/>
+          <circle cx="560" cy="290" r="50" fill="#334155" stroke="#94a3b8" stroke-width="6"/>
+          <!-- Occluded Cast Plate -->
+          <rect x="380" y="140" width="140" height="50" fill="#090a0f" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4"/>
+          <text x="450" y="169" fill="#ef4444" font-size="10" font-family="monospace" text-anchor="middle">[OCCLUDED_SERIAL]</text>
+        `;
+      }
+    },
+    {
+      id: "CASE_003",
+      title: "Rotary Disk Tea Pulper",
+      category: "Agricultural Technology",
+      license: "Smithsonian Open Access (Public Domain Dedication)",
+      prompt: "State the specific industrial processing machinery shown and its agricultural commodity application.",
+      rubric: "Pass if answer specifies 'rotary disk' (or 'continuous roller') and 'tea' (or 'Camellia sinensis'); fail if classified generally as a grain mill.",
+      evalRegex: /(tea).*rotary|rotary.*(tea)/i,
+      steps: [
+        "Analyze circular grooved cast iron disk pattern and feeder chute orientation.",
+        "Perform reverse visual lookup across patent records for colonial-era primary crop processors.",
+        "Distinguish disk milling flutes from coffee depulping drums based on clearance depth."
+      ],
+      drawOriginal: (svg) => {
+        svg.innerHTML = `
+          <rect width="100%" height="100%" fill="#111317"/>
+          <circle cx="450" cy="190" r="120" fill="#262626" stroke="#525252" stroke-width="10"/>
+          ${Array.from({length: 12}).map((_, i) => `
+            <line x1="450" y1="190" x2="${450 + 100 * Math.cos(i * Math.PI / 6)}" y2="${190 + 100 * Math.sin(i * Math.PI / 6)}" stroke="#737373" stroke-width="4"/>
+          `).join('')}
+          <rect x="410" y="50" width="80" height="60" fill="#171717" stroke="#404040"/>
+          <text x="450" y="270" fill="#a3a3a3" font-size="10" font-family="monospace" text-anchor="middle">ROTARY TEA CUTTER</text>
+        `;
+      },
+      drawOccluded: (svg) => {
+        svg.innerHTML = `
+          <rect width="100%" height="100%" fill="#111317"/>
+          <circle cx="450" cy="190" r="120" fill="#262626" stroke="#525252" stroke-width="10"/>
+          ${Array.from({length: 12}).map((_, i) => `
+            <line x1="450" y1="190" x2="${450 + 100 * Math.cos(i * Math.PI / 6)}" y2="${190 + 100 * Math.sin(i * Math.PI / 6)}" stroke="#737373" stroke-width="4"/>
+          `).join('')}
+          <rect x="410" y="50" width="80" height="60" fill="#171717" stroke="#404040"/>
+          <rect x="370" y="250" width="160" height="30" fill="#090a0f" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4"/>
+          <text x="450" y="269" fill="#ef4444" font-size="10" font-family="monospace" text-anchor="middle">[OCCLUDED_NAMEPLATE]</text>
+        `;
+      }
+    }
+  ];
+
+  let activeIndex = 0;
+
+  // Initialize Case List
+  const caseListEl = document.getElementById('caseList');
+  cases.forEach((item, idx) => {
+    const btn = document.createElement('div');
+    btn.className = `case-item ${idx === 0 ? 'active' : ''}`;
+    btn.innerHTML = `
+      <span class="case-item-title">${item.title}</span>
+      <span class="case-item-meta">${item.id} // ${item.category}</span>
+    `;
+    btn.onclick = () => selectCase(idx);
+    caseListEl.appendChild(btn);
+  });
+
+  function selectCase(idx) {
+    activeIndex = idx;
+    document.querySelectorAll('.case-item').forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+    });
+
+    const c = cases[idx];
+    document.getElementById('taskPrompt').textContent = c.prompt;
+    document.getElementById('taskRubric').textContent = c.rubric;
+    document.getElementById('taskLicense').textContent = c.license;
+
+    const stepsList = document.getElementById('taskSteps');
+    stepsList.innerHTML = '';
+    c.steps.forEach(step => {
+      const li = document.createElement('li');
+      li.textContent = step;
+      stepsList.appendChild(li);
+    });
+
+    // Reset evaluator feedback
+    const evalResult = document.getElementById('evalResult');
+    evalResult.className = 'eval-result';
+    evalResult.style.display = 'none';
+    document.getElementById('evalInput').value = '';
+
+    // Render SVGs
+    c.drawOriginal(document.getElementById('svgOriginal'));
+    c.drawOccluded(document.getElementById('svgOccluded'));
+  }
+
+  // Interactive Split Slider Handling
+  const viewport = document.getElementById('viewport');
+  const occludedWrapper = document.getElementById('occludedWrapper');
+  const sliderHandle = document.getElementById('sliderHandle');
+  let isDragging = false;
+
+  function setSliderPosition(x) {
+    const rect = viewport.getBoundingClientRect();
+    let pos = (x - rect.left) / rect.width;
+    pos = Math.max(0.05, Math.min(0.95, pos));
+    const percent = pos * 100;
+
+    occludedWrapper.style.width = percent + '%';
+    sliderHandle.style.left = percent + '%';
+  }
+
+  viewport.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    setSliderPosition(e.clientX);
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (isDragging) setSliderPosition(e.clientX);
+  });
+  window.addEventListener('mouseup', () => { isDragging = false; });
+
+  // Touch Support
+  viewport.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    setSliderPosition(e.touches[0].clientX);
+  });
+  window.addEventListener('touchmove', (e) => {
+    if (isDragging) setSliderPosition(e.touches[0].clientX);
+  });
+  window.addEventListener('touchend', () => { isDragging = false; });
+
+  // Evaluator Logic
+  document.getElementById('evalBtn').addEventListener('click', () => {
+    const val = document.getElementById('evalInput').value.trim();
+    const resultBox = document.getElementById('evalResult');
+    const c = cases[activeIndex];
+
+    if (!val) {
+      resultBox.textContent = 'Please enter a test response string.';
+      resultBox.className = 'eval-result fail';
+      return;
+    }
+
+    if (c.evalRegex.test(val)) {
+      resultBox.textContent = 'EVALUATION: PASS // Output satisfies ground truth & strict rubric.';
+      resultBox.className = 'eval-result pass';
+    } else {
+      resultBox.textContent = 'EVALUATION: FAIL // Output does not satisfy all required rubric criteria.';
+      resultBox.className = 'eval-result fail';
+    }
+  });
+
+  // Initial load
+  selectCase(0);
+  setSliderPosition(viewport.getBoundingClientRect().left + 450);
+</script>
+</body>
+</html>
