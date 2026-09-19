@@ -1,5 +1,20 @@
 # OcclusionBench // Multimodal Agent Evaluation Suite
 
+# OcclusionBench // Multimodal Agent Evaluation Suite
+
+[![Live Demo](https://img.shields.io/badge/Demo-Live_Preview-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://occlusion-bench.vercel.app/)
+[![License: CC0](https://img.shields.io/badge/License-CC0-green?style=for-the-badge)](https://creativecommons.org/publicdomain/zero/1.0/)
+
+> **Live Interactive Benchmark:** [https://occlusion-bench.vercel.app/](https://occlusion-bench.vercel.app/)
+
+---
+
+## Preview
+
+[![OcclusionBench Interface Preview](preview.png)](https://occlusion-bench.vercel.app/)
+*(Click the image to test the interactive evaluation suite live on Vercel)*
+
+---
 A lightweight, zero-dependency visual evaluation harness and benchmark dataset designed to test multimodal AI agents (vision-language models) on multi-step visual entity resolution, image occlusion reasoning, and open-source intelligence (OSINT) search pipelines.
 
 ---
